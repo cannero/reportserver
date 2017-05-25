@@ -1,0 +1,2 @@
+use report;
+db.data.createIndex({date: 1}, {unique: true});
