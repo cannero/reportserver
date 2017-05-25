@@ -1,0 +1,10 @@
+[package]
+name = "reportserver"
+version = "0.1.0"
+authors = ["Cannero <serunmal@gmail.com>"]
+
+[dependencies]
+encoding = "0.2.33"
+chrono = "0.3"
+bson = "0.7.1"
+mongodb = "0.2.9"
