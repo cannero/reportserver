@@ -14,6 +14,7 @@ use chrono::prelude::*;
 use mongodb::{Client, ThreadedClient};
 use mongodb::db::ThreadedDatabase;
 use mongodb::coll::Collection;
+use mongodb::coll::options::UpdateOptions;
 
 fn main() {
 
@@ -41,18 +42,15 @@ fn main() {
     let coll = client.db("report").collection("data");
 
     let mut current_date = entries[0].date;
+    insert_date(&current_date, &coll);
     for entry in entries {
         if entry.date != current_date {
             current_date = entry.date;
             println!("changed to {}", current_date);
+            insert_date(&entry.date, &coll);
         }
+        add_entry(&entry, &coll);
     }
-}
-
-fn test_mongo() {
-    let client = Client::connect("localhost", 27017).expect("could not connect to mongodb");
-    let coll = client.db("test").collection("test");
-    coll.insert_one(doc! {"a" => "800"}, None).unwrap();
 }
 
 fn read_latin1_file(file_name: String) -> String {
@@ -115,10 +113,35 @@ struct Entry {
     comment: String,
 }
 
-fn insert_date(date: NaiveDate, collection: Collection) {
+fn get_utc_from_naive(date: &NaiveDate) -> DateTime<UTC> {
     let from_utc = DateTime::<UTC>::from_utc;
-    let date_time = from_utc(date.and_hms(0, 0, 0), UTC);
+    from_utc(date.and_hms(0, 0, 0), UTC)
+}
+
+fn insert_date(date: &NaiveDate, collection: &Collection) {
+    let date_time = get_utc_from_naive(date);
     collection.insert_one(doc! {"date" => date_time}, None).unwrap();
+}
+
+fn add_entry(entry: &Entry, collection: &Collection) {
+    let date_time = get_utc_from_naive(&entry.date);
+    let update = doc! {"$push" =>
+                       {"entries" =>
+                        {"employee" => (&entry.employee),
+                         "customer" => (&entry.customer),
+                         "project" => (&entry.project),
+                         "event" => (&entry.event),
+                         "duration" => (entry.duration),
+                         "comment" => (&entry.comment)}}};
+    let mut update_options = UpdateOptions::new();
+    update_options.upsert = Some(true);
+    let result = collection.update_one(doc! {"date" => date_time},
+                                       update,
+                                       Some(update_options));
+    match result{
+        Err(e) => println! ("some error {}", e),
+        Ok(_) => ()
+    }
 }
 
 
