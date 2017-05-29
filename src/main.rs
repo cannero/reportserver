@@ -10,12 +10,9 @@ use std::io::prelude::*;
 use std::path::Path;
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::ISO_8859_1;
-use chrono::prelude::*;
 use bson::Document;
 use mongodb::{Client, ThreadedClient};
 use mongodb::db::ThreadedDatabase;
-use mongodb::coll::Collection;
-use mongodb::coll::options::UpdateOptions;
 
 use self::reportserver::Entry;
 mod reportserver;
@@ -39,23 +36,14 @@ fn main() {
         entries.push(entry);
     }
 
-    if entries.len() == 0 {
-        return;
-    }
     println!("entries found {}", entries.len());
 
     let client = Client::connect("localhost", 27017).expect("could not connect to mongodb");
-    let coll = client.db("report").collection("data");
-
-    let mut current_date = entries[0].date;
-    insert_date(&current_date, &coll);
-    for entry in entries {
-        if entry.date != current_date {
-            current_date = entry.date;
-            println!("changed to {}", current_date);
-            insert_date(&entry.date, &coll);
-        }
-        add_entry(&entry, &coll);
+    let coll = client.db("report").collection("entries");
+    let result = coll.insert_many(documents, None);
+    match result{
+        Err(e) => println! ("some error {}", e),
+        Ok(_) => (),
     }
 }
 
@@ -80,31 +68,6 @@ fn read_latin1_file(file_name: String) -> String {
     content
 }
 
-fn insert_date(date: &NaiveDate, collection: &Collection) {
-    let date_time = reportserver::get_utc_from_naive(date);
-    collection.insert_one(doc! {"date" => date_time}, None).unwrap();
-}
-
-fn add_entry(entry: &Entry, collection: &Collection) {
-    let date_time = reportserver::get_utc_from_naive(&entry.date);
-    let update = doc! {"$push" =>
-                       {"entries" =>
-                        {"employee" => (&entry.employee),
-                         "customer" => (&entry.customer),
-                         "project" => (&entry.project),
-                         "event" => (&entry.event),
-                         "duration" => (entry.duration),
-                         "comment" => (&entry.comment)}}};
-    let mut update_options = UpdateOptions::new();
-    update_options.upsert = Some(true);
-    let result = collection.update_one(doc! {"date" => date_time},
-                                       update,
-                                       Some(update_options));
-    match result{
-        Err(e) => println! ("some error {}", e),
-        Ok(_) => ()
-    }
-}
 
 
 
