@@ -11,10 +11,14 @@ use std::path::Path;
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::ISO_8859_1;
 use chrono::prelude::*;
+use bson::Document;
 use mongodb::{Client, ThreadedClient};
 use mongodb::db::ThreadedDatabase;
 use mongodb::coll::Collection;
 use mongodb::coll::options::UpdateOptions;
+
+use self::reportserver::Entry;
+mod reportserver;
 
 fn main() {
 
@@ -22,14 +26,16 @@ fn main() {
 
     let lines: Vec<&str> = content.split("\r\n").collect();
     let mut entries: Vec<Entry> = vec![];
-    //todo check for header line
+    let mut documents: Vec<Document> = vec![];
 
     for line in lines.iter().skip(1) {
         if line.trim() == "" {
             continue;
         }
         let values: Vec<&str> = line.split(";").collect();
-        let entry = create_entry(values);
+        let entry = Entry::new(values);
+
+        documents.push(entry.to_bson());
         entries.push(entry);
     }
 
@@ -74,57 +80,13 @@ fn read_latin1_file(file_name: String) -> String {
     content
 }
 
-fn create_entry(input: Vec<&str>) -> Entry {
-    let parse_from_str = NaiveDate::parse_from_str;
-    assert!(input.len() >= 6, "does not contain at least 6 entries {:?}", input);
-
-    let hours_and_minutes: Vec<&str> = input[6].split(":").collect();
-    let hours: u32 = hours_and_minutes[0].parse().expect("hours not a number");
-    let minutes: u32 = hours_and_minutes[1].parse().expect("minutes not a number");
-
-    Entry {
-        date: parse_from_str(input[0], "%d.%m.%y").unwrap(),
-        customer: input[1].to_string(),
-        employee: input[2].to_string(),
-        project: input[3].to_string(),
-        event: input[4].to_string(),
-        comment: input[5].to_string(),
-        duration: (hours * 3600) + (minutes * 60),
-    }
-}
-
-#[test]
-fn test_create_entry(){
-    let input = vec!["03.04.17", "NASA", "Alfons, Hans", "Blaster2000", "/AA/BB/CC",
-                     "Hochspannung erzeugen", "02:30"];
-    let entry = create_entry(input);
-    assert_eq!(entry.date, NaiveDate::from_ymd(2017, 4, 3));
-    assert_eq!(entry.customer, "NASA");
-    assert_eq!(entry.duration, 2 * 60 * 60 + 30 * 60);
-}
-
-struct Entry {
-    date: NaiveDate,
-    employee: String,
-    duration: u32,
-    customer: String,
-    project: String,
-    event: String,
-    comment: String,
-}
-
-fn get_utc_from_naive(date: &NaiveDate) -> DateTime<UTC> {
-    let from_utc = DateTime::<UTC>::from_utc;
-    from_utc(date.and_hms(0, 0, 0), UTC)
-}
-
 fn insert_date(date: &NaiveDate, collection: &Collection) {
-    let date_time = get_utc_from_naive(date);
+    let date_time = reportserver::get_utc_from_naive(date);
     collection.insert_one(doc! {"date" => date_time}, None).unwrap();
 }
 
 fn add_entry(entry: &Entry, collection: &Collection) {
-    let date_time = get_utc_from_naive(&entry.date);
+    let date_time = reportserver::get_utc_from_naive(&entry.date);
     let update = doc! {"$push" =>
                        {"entries" =>
                         {"employee" => (&entry.employee),
@@ -143,5 +105,6 @@ fn add_entry(entry: &Entry, collection: &Collection) {
         Ok(_) => ()
     }
 }
+
 
 

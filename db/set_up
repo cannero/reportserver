@@ -1,2 +1,3 @@
 use report;
 db.data.createIndex({date: 1}, {unique: true});
+db.entries.createIndex({date: 1, employee: 1, customer: 1, project: 1, event: 1}, {unique: true});
