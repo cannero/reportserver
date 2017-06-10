@@ -1,0 +1,44 @@
+db.entries.aggregate([{"$group": {"_id": {"date" : "$date","employee": "$employee", "customer": "$customer", "project": "$project", "event" : "$event"},"count": {"$sum":1}}}, {"$sort" : {"count": -1}}])
+
+todo: https://docs.mongodb.com/manual/reference/operator/aggregation/match/
+where in aggregate
+
+db.entries.aggregate([{"$group": {"_id": {"customer": "$customer"},"count": {"$sum":"$duration"}}}, {"$sort" : {"count": -1}}])
+
+db.entries.aggregate([{"$group": {"_id": {"date": "$date", "employee" : "$employee"},"count_entries": {"$sum":1}}}, {"$group": {"_id" : {"employee" : "$_id.employee"}, "count_days": {"$sum":1}, "avg_entries": {"$avg": "$count_entries"}}}])
+
+//total duration
+db.entries.aggregate([{"$group": {"_id": {},"count": {"$sum":"$duration"}}}])
+
+db.entries.find({$where: "this.date.getMonth() > 2"})
+
+var mapFunction = function(){
+ var key = this.date.getMonth();
+ var value = {duration: this.duration};
+ emit(key, value);
+};
+
+//the type of the value returned by reduce has to be the same as in the map step,
+//as the reduce function can be called with intermediate results
+var reduceFunction = function(key, values){
+    var sum = {duration: 0};
+    values.forEach(function(value){
+        sum.duration += value.duration;
+    });
+    return sum;
+};
+
+//creates new collection 'dur'
+db.entries.mapReduce(mapFunction,reduceFunction, {out: "dur"})
+
+//entries per day and employee
+var mapFunction = function(){
+ var key = {date: this.date, employee: this.employee}
+ var value = 1;
+ emit(key, value);
+};
+
+var reduceFunction = function(key, values){
+    return Array.sum(values);
+};
+
