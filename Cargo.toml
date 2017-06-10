@@ -8,6 +8,11 @@ encoding = "0.2.33"
 chrono = "0.3"
 bson = "0.7.1"
 mongodb = "0.2.9"
+iron = "*"
+router = "*"
+time = "*"
+staticfile = "*"
+mount = "*"
 
 [lib]
 name = "reportlib"
@@ -16,3 +21,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "importer"
 path = "src/importer.rs"
+
+[[bin]]
+name = "reportserver"
+path = "src/server.rs"
