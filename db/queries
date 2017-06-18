@@ -1,16 +1,19 @@
+db.entries.find({division: {$ne: "Arad"}, employee: {$ne: "Nicoara, Brigtta"}})
+
+//group all entries for one day
 db.entries.aggregate([{"$group": {"_id": {"date" : "$date","employee": "$employee", "customer": "$customer", "project": "$project", "event" : "$event"},"count": {"$sum":1}}}, {"$sort" : {"count": -1}}])
 
-todo: https://docs.mongodb.com/manual/reference/operator/aggregation/match/
-where in aggregate
-
+//group by customer
 db.entries.aggregate([{"$group": {"_id": {"customer": "$customer"},"count": {"$sum":"$duration"}}}, {"$sort" : {"count": -1}}])
+db.entries.aggregate([{"$group": {"_id": {"customer": "$customer", "division": "$division"},"count": {"$sum":"$duration"}}}, {"$sort" : {"count": -1}}])
 
+//average entries per employee
 db.entries.aggregate([{"$group": {"_id": {"date": "$date", "employee" : "$employee"},"count_entries": {"$sum":1}}}, {"$group": {"_id" : {"employee" : "$_id.employee"}, "count_days": {"$sum":1}, "avg_entries": {"$avg": "$count_entries"}}}])
 
 //total duration
 db.entries.aggregate([{"$group": {"_id": {},"count": {"$sum":"$duration"}}}])
-
-db.entries.find({$where: "this.date.getMonth() > 2"})
+db.entries.aggregate([{"$group": {"_id": {},"count": {"$sum": {"$divide": ["$duration", 3600]}}}}]
+db.entries.aggregate([{$match: {division: "Krailling"}},{"$group": {"_id": {}, "count": {"$sum": {"$divide": ["$duration", 3600]}}}}])
 
 var mapFunction = function(){
  var key = this.date.getMonth();

@@ -14,25 +14,40 @@ pub struct Entry {
     pub project: String,
     pub event: String,
     pub comment: String,
+    pub division: String,
 }
 
 impl Entry {
     pub fn new(input: Vec<&str>) -> Entry {
         let parse_from_str = NaiveDate::parse_from_str;
-        assert!(input.len() >= 6, "does not contain at least 6 entries {:?}", input);
-        
-        let hours_and_minutes: Vec<&str> = input[6].split(":").collect();
-        let hours: u32 = hours_and_minutes[0].parse().expect("hours not a number");
-        let minutes: u32 = hours_and_minutes[1].parse().expect("minutes not a number");
+        //last entry is the empty string, that's why check for 8
+        assert!(input.len() == 8, "does not contain 7 entries {:?}", input);
+        let employes_arad = vec!["Tanasie, Cosmin", "Teudan, Emanuel", "Nicoara, Brigitta", "Sokol, Peter", "Homone, Adrian", "Ivan, Marius"];
+        let (hours, minutes) = match get_hours_and_minutes_from_string(input[6].to_string()) {
+            Some((h, m)) => (h, m),
+            None => {
+                println!("no number found {}", input.join("-"));
+                (0, 0)
+            }
+        };
+
+        let employee = input[2];
+        let division =
+            if employes_arad.contains(&employee) {
+                "Arad"
+            } else {
+                "Krailling"
+            };
 
         Entry {
             date: parse_from_str(input[0], "%d.%m.%y").unwrap(),
             customer: input[1].to_string(),
-            employee: input[2].to_string(),
+            employee: employee.to_string(),
             project: input[3].to_string(),
             event: input[4].to_string(),
             comment: input[5].to_string(),
             duration: (hours * 3600) + (minutes * 60),
+            division: division.to_string(),
         }
     }
 
@@ -44,8 +59,28 @@ impl Entry {
               "project" => (&self.project),
               "event" => (&self.event),
               "duration" => (self.duration),
-              "comment" => (&self.comment)}
+              "comment" => (&self.comment),
+              "division" => (&self.division) }
     }
+}
+
+fn get_hours_and_minutes_from_string(input: String) -> Option<(u32, u32)> {
+    if input == "" {
+        return None;
+    }
+    let hours_and_minutes: Vec<&str> = input.split(":").collect();
+    if hours_and_minutes.len() != 2 {
+        return None;
+    }
+    let hours: u32 = match hours_and_minutes[0].parse() {
+        Ok(i) => i,
+        Err(_e) => return None,
+    };
+    let minutes: u32 = match hours_and_minutes[1].parse() {
+        Ok(i) => i,
+        Err(_e) => return None,
+    };
+    Some((hours, minutes))
 }
 
 #[test]

@@ -17,8 +17,8 @@ use mongodb::db::ThreadedDatabase;
 use self::reportserver::Entry;
 mod reportserver;
 
-pub fn read_file_and_insert() {
-    let content = read_latin1_file("c:/dat/planning/Leistungsnachweis_17April.txt".to_string());
+pub fn read_file_and_insert(path: &String, seperator: char) {
+    let content = read_latin1_file(path);
 
     let lines: Vec<&str> = content.split("\r\n").collect();
     let mut entries: Vec<Entry> = vec![];
@@ -28,7 +28,7 @@ pub fn read_file_and_insert() {
         if line.trim() == "" {
             continue;
         }
-        let values: Vec<&str> = line.split(";").collect();
+        let values: Vec<&str> = line.split(seperator).collect();
         let entry = Entry::new(values);
 
         documents.push(entry.to_bson());
@@ -39,15 +39,17 @@ pub fn read_file_and_insert() {
 
     let client = Client::connect("localhost", 27017).expect("could not connect to mongodb");
     let coll = client.db("report").collection("entries");
-    let result = coll.insert_many(documents, None);
-    match result{
-        Err(e) => println! ("some error {}", e),
-        Ok(_) => (),
+    for document_chunks in documents.chunks(999){
+        let result = coll.insert_many(document_chunks.to_vec(), None);
+        match result{
+            Err(e) => println! ("error during insert: {}", e),
+            Ok(_) => (),
+        }
     }
 }
 
-fn read_latin1_file(file_name: String) -> String {
-    let path = Path::new(&file_name);
+fn read_latin1_file(file_name: &String) -> String {
+    let path = Path::new(file_name);
     let display = path.display();
     
     let mut file = match File::open(&path) {
