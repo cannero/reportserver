@@ -7,7 +7,6 @@ extern crate mongodb;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::Path;
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::ISO_8859_1;
 use bson::Document;
@@ -49,11 +48,9 @@ pub fn read_file_and_insert(path: &String, seperator: char) {
 }
 
 fn read_latin1_file(file_name: &String) -> String {
-    let path = Path::new(file_name);
-    let display = path.display();
-    
-    let mut file = match File::open(&path) {
-        Err(why) => panic!("couldn't open {}: {}", display,
+
+    let mut file = match File::open(&file_name) {
+        Err(why) => panic!("couldn't open {}: {}", file_name,
                            why.description()),
         Ok(file) => file,
     };

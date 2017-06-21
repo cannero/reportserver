@@ -24,9 +24,9 @@ impl Entry {
         assert!(input.len() == 8, "does not contain 7 entries {:?}", input);
         let employes_arad = vec!["Tanasie, Cosmin", "Teudan, Emanuel", "Nicoara, Brigitta", "Sokol, Peter", "Homone, Adrian", "Ivan, Marius"];
         let (hours, minutes) = match get_hours_and_minutes_from_string(input[6].to_string()) {
-            Some((h, m)) => (h, m),
-            None => {
-                println!("no number found {}", input.join("-"));
+            Ok((h, m)) => (h, m),
+            Err(e) => {
+                println!("no number found {} in {}", e, input.join("-"));
                 (0, 0)
             }
         };
@@ -64,31 +64,41 @@ impl Entry {
     }
 }
 
-fn get_hours_and_minutes_from_string(input: String) -> Option<(u32, u32)> {
+fn get_hours_and_minutes_from_string(input: String) -> Result<(u32, u32), &'static str> {
     if input == "" {
-        return None;
+        return Err("empty input");
     }
     let hours_and_minutes: Vec<&str> = input.split(":").collect();
     if hours_and_minutes.len() != 2 {
-        return None;
+        return Err("input does not contain two values");
     }
     let hours: u32 = match hours_and_minutes[0].parse() {
         Ok(i) => i,
-        Err(_e) => return None,
+        Err(_e) => return Err("hours cannot be parsed"),
     };
     let minutes: u32 = match hours_and_minutes[1].parse() {
         Ok(i) => i,
-        Err(_e) => return None,
+        Err(_e) => return Err("minutes cannot be parsed"),
     };
-    Some((hours, minutes))
+    Ok((hours, minutes))
 }
 
 #[test]
 fn test_create_entry(){
     let input = vec!["03.04.17", "NASA", "Alfons, Hans", "Blaster2000", "/AA/BB/CC",
-                     "Hochspannung erzeugen", "02:30"];
+                     "Hochspannung erzeugen", "02:30", ""];
     let entry = Entry::new(input);
     assert_eq!(entry.date, NaiveDate::from_ymd(2017, 4, 3));
     assert_eq!(entry.customer, "NASA");
     assert_eq!(entry.duration, 2 * 60 * 60 + 30 * 60);
 }
+
+#[test]
+fn test_get_hours_and_minutes(){
+    let result = get_hours_and_minutes_from_string(String::from("1:30"));
+    assert!(result.is_ok());
+
+    let result = get_hours_and_minutes_from_string(String::from("1:2:3"));
+    assert!(result.is_err());
+}
+
