@@ -1,8 +1,26 @@
 <template>
   <require from="bootstrap/css/bootstrap.css"></require>
-  <div class="row">
-    <div class="row-md-4">
-      <h1>${message}</h1>
+  <require from="handsontable/handsontable.full.css"></require>
+  <div class="container">
+    <div class="row">
+      <div class="row-md-4">
+        <h1>${message} ${selectedQuery.id}</h1>
+      </div>
     </div>
+    <div class="row">
+      <div class="row-md-4">
+        <label>
+          Select Query:<br/>
+          <select value.bind="selectedQuery">
+            <option model.bind="null">Choose...</option>
+            <option repeat.for="query of querys"
+                    model.bind="query">
+              ${query.name}
+            </option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <table-wrapper></table-wrapper>
   </div>
 </template>

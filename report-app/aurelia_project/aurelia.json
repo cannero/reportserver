@@ -146,7 +146,14 @@
                     "css/bootstrap.css"
                 ]
             },
-            "handsontable"
+            {
+                "name": "handsontable",
+                "path": "../node_modules/handsontable/dist",
+                "main": "handsontable.full",
+                "resources": [
+                    "handsontable.full.css"
+                ]
+            }
         ]
       }
     ]
