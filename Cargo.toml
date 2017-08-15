@@ -13,6 +13,7 @@ router = "*"
 time = "*"
 staticfile = "*"
 mount = "*"
+url = "*"
 
 [lib]
 name = "reportlib"
