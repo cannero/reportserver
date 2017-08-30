@@ -15,6 +15,7 @@ use mongodb::db::ThreadedDatabase;
 
 use self::reportserver::Entry;
 mod reportserver;
+mod dbaccess;
 
 pub fn read_file_and_insert(path: &String, seperator: char) {
     let content = read_latin1_file(path);
@@ -64,4 +65,8 @@ fn read_latin1_file(file_name: &String) -> String {
     };
 
     content
+}
+
+pub fn get_employee_data_newer_than(days: i64) -> usize{
+    dbaccess::get_employee_data_newer_than(days)
 }

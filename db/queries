@@ -45,3 +45,6 @@ var reduceFunction = function(key, values){
     return Array.sum(values);
 };
 
+
+//newer than x days
+db.entries.find({"date" : {"$gte" : new Date(ISODate() - 1000 * 3600 * 24 * x)}})

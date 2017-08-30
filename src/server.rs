@@ -4,6 +4,7 @@ extern crate staticfile;
 extern crate mount;
 extern crate time;
 extern crate url;
+extern crate reportlib;
 
 use iron::prelude::*;
 use router::Router;
@@ -15,6 +16,7 @@ mod console_middleware;
 use console_middleware::ConsoleResponder;
 mod cors_middleware;
 use cors_middleware::CorsMiddleware;
+use reportlib::get_employee_data_newer_than;
 
 fn hello_world(req: &mut Request) -> IronResult<Response> {
     let path = req.url.path().join("/");
@@ -27,7 +29,8 @@ fn data_for_employees(req: &mut Request) -> IronResult<Response> {
     for key_value in  parsed_url.query_pairs().into_owned() {
         println!("query is {:?}", key_value);
     }
-    Ok(Response::with(iron::status::Ok))
+    let count = get_employee_data_newer_than(100);
+    Ok(Response::with((iron::status::Ok, count.to_string())))
 }
 
 
@@ -35,7 +38,7 @@ fn main() {
 
     let mut api_router = Router::new();
     api_router.get("/:page", hello_world, "page");
-    api_router.get("/peremployee", data_for_employees, "per_employee");
+    api_router.get("/foremployee", data_for_employees, "for_employee");
 
     let mut cors_chain = Chain::new(api_router);
     cors_chain.link_after(CorsMiddleware);
