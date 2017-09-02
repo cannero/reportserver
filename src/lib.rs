@@ -3,6 +3,8 @@ extern crate chrono;
 #[macro_use(bson,doc)]
 extern crate bson;
 extern crate mongodb;
+#[macro_use]
+extern crate serde_json;
 
 use std::error::Error;
 use std::fs::File;
@@ -67,6 +69,6 @@ fn read_latin1_file(file_name: &String) -> String {
     content
 }
 
-pub fn get_employee_data_newer_than(days: i64) -> usize{
+pub fn get_employee_data_newer_than(days: i64) -> String{
     dbaccess::get_employee_data_newer_than(days)
 }

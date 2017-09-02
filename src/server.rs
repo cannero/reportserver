@@ -29,8 +29,8 @@ fn data_for_employees(req: &mut Request) -> IronResult<Response> {
     for key_value in  parsed_url.query_pairs().into_owned() {
         println!("query is {:?}", key_value);
     }
-    let count = get_employee_data_newer_than(100);
-    Ok(Response::with((iron::status::Ok, count.to_string())))
+    let result = get_employee_data_newer_than(100);
+    Ok(Response::with((iron::status::Ok, result)))
 }
 
 
