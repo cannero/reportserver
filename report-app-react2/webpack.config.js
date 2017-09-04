@@ -19,6 +19,11 @@ var config = {
                 query: {
                     presets:['react']
                 }
+            },
+            {
+                test : /\.css$/,
+                include : APP_DIR,
+                loaders : ['style-loader', 'css-loader']
             }
         ]
     }

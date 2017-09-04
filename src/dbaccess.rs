@@ -7,8 +7,8 @@ use chrono::Duration;
 use bson::{Bson, Document};
 use std::collections::HashMap;
 
-pub fn get_employee_data_newer_than(days: i64) -> String{
-    let coll = get_entries_collection();
+pub fn get_employee_data_newer_than(client: &Client, days: i64) -> String{
+    let coll = get_entries_collection(client);
     let now = UTC::now();
     let duration = Duration::days(days);
     let date_from = now - duration;
@@ -81,18 +81,16 @@ fn doc_to_json_string(doc: Document) -> String {
     format!("{}", json!(key_and_values))
 }
 
-fn get_entries_collection() -> Collection {
-    let db = get_report_db();
+fn get_entries_collection(client: &Client) -> Collection {
+    let db = get_report_db(client);
     db.collection("entries")
 }
 
-fn get_report_db() -> Database {
-    let client = connect();
+fn get_report_db(client: &Client) -> Database {
     client.db("report")
 }
 
-fn connect() -> Client {
-   
+pub fn get_connection() -> Client {
     let client = Client::connect("localhost", 27017).expect("could not connect to mongodb");
     client
 }
