@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Nav, NavItem, Navbar} from 'react-bootstrap';
-import './Sidebar.css';
 import img from './sidebar-2.jpg';
+import './scss/main.scss';
 
 class Sidebar extends React.Component {
 
@@ -12,8 +12,8 @@ class Sidebar extends React.Component {
 
     render() {
         return (
-            <div className="sidebar-wrapper">
-                <div className="sidebar">
+            <div className="sidebar">
+                <div className="sidebar-wrapper">
                     <Nav bsStyle="pills" stacked className="sidebar-nav">
                         <NavItem eventKey={1} href="#">Link 1</NavItem>
                         <NavItem eventKey={2} href="#">Link 2</NavItem>

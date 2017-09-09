@@ -9,7 +9,7 @@ class App extends React.Component {
         return (
             <Grid fluid = {true}>
                 <Row>
-                    <Col md={2}>
+                    <Col md={2} className="sidebarcolumn">
                         <Sidebar />
                     </Col>
                     <Col md={10}>
