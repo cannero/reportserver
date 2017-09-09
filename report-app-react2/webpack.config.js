@@ -10,20 +10,29 @@ var config = {
         path: BUILD_DIR,
         filename: 'bundle.js'
     },
-    module : {
-        loaders : [
+    module: {
+        loaders: [
             {
-                test : /\.jsx?/,
-                include : APP_DIR,
-                loader : 'babel-loader',
+                test: /\.jsx?/,
+                include: APP_DIR,
+                loader: 'babel-loader',
                 query: {
                     presets:['react']
                 }
             },
             {
-                test : /\.css$/,
-                include : APP_DIR,
-                loaders : ['style-loader', 'css-loader']
+                test: /\.css$/,
+                include: APP_DIR,
+                loaders: ['style-loader', 'css-loader']
+            },
+            {
+                test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+                include: APP_DIR,
+                loader: 'url-loader',
+                options: {
+                    limit: 10000,
+                    name: 'static/[name].[hash:8].[ext]',
+                },
             }
         ]
     }
