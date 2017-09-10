@@ -4,6 +4,9 @@ var path = require('path');
 var BUILD_DIR = path.resolve(__dirname, 'src/client/public');
 var APP_DIR = path.resolve(__dirname, 'src/client/app');
 
+//todo the environment variable is declared in start.js, test.js, build.js of react-scripts, used for babel-preset-react-app
+process.env.NODE_ENV = 'development';
+
 var config = {
     entry: APP_DIR + '/index.jsx',
     output: {
@@ -17,7 +20,7 @@ var config = {
                 include: APP_DIR,
                 loader: 'babel-loader',
                 query: {
-                    presets:['react']
+                    presets:['babel-preset-react-app']
                 }
             },
             {

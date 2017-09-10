@@ -25,7 +25,7 @@ impl AfterMiddleware for ConsoleResponder {
     }
 
     fn catch(&self, req: &mut Request, err: IronError) -> IronResult<Response> {
-        println!("Error happended: {}", err);
+        println!("Error happened: {}", err);
         println!("Request was: {:?}", req);
         Err(err)
     }

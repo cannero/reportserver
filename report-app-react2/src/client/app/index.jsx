@@ -3,6 +3,7 @@ import {render} from 'react-dom';
 import Sidebar from './Sidebar.jsx'
 import {Grid, Row, Col} from 'react-bootstrap';
 import AwesomeComponent from './AwesomeComponent.jsx';
+import DataPerCustomer from './DataPerCustomer.js';
 
 class App extends React.Component {
     render() {
@@ -13,7 +14,12 @@ class App extends React.Component {
                         <Sidebar />
                     </Col>
                     <Col md={10}>
+                    <Row>
                         <AwesomeComponent />
+                    </Row>
+                    <Row>
+                        <DataPerCustomer />
+                    </Row>
                     </Col>
                 </Row>
             </Grid>

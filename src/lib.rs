@@ -69,8 +69,16 @@ fn read_latin1_file(file_name: &String) -> String {
     content
 }
 
-pub fn get_employee_data_newer_than(client: &mongodb::Client, days: i64) -> String{
+pub fn get_employee_data_newer_than(client: &mongodb::Client, days: u32) -> String{
     dbaccess::get_employee_data_newer_than(client, days)
+}
+
+pub fn get_entries_containing_comment(client: &mongodb::Client, part: &String) -> String {
+    dbaccess::get_entries_containing_comment(client, &part)
+}
+
+pub fn time_per_customer(client: &mongodb::Client) -> String {
+    dbaccess::time_per_customer(client)
 }
 
 pub fn get_connection() -> mongodb::Client {
