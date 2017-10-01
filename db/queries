@@ -12,7 +12,7 @@ db.entries.aggregate([{"$group": {"_id": {"date": "$date", "employee" : "$employ
 
 //total duration
 db.entries.aggregate([{"$group": {"_id": {},"count": {"$sum":"$duration"}}}])
-db.entries.aggregate([{"$group": {"_id": {},"count": {"$sum": {"$divide": ["$duration", 3600]}}}}]
+db.entries.aggregate([{"$group": {"_id": {},"count": {"$sum": {"$divide": ["$duration", 3600]}}}}])
 db.entries.aggregate([{$match: {division: "Krailling"}},{"$group": {"_id": {}, "count": {"$sum": {"$divide": ["$duration", 3600]}}}}])
 
 var mapFunction = function(){

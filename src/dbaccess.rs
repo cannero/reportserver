@@ -9,9 +9,7 @@ use std::collections::HashMap;
 
 pub fn get_employee_data_newer_than(client: &Client, days: u32) -> String{
     let coll = get_entries_collection(client);
-    let now = UTC::now();
-    let duration = Duration::days(days as i64);
-    let date_from = now - duration;
+    let date_from = get_now_minus_x_days(days);
 
     let options = get_standard_find_options();
     
@@ -74,13 +72,20 @@ pub fn get_entries_containing_comment(client: &Client, part: &String) -> String 
     result_string
 }
 
-pub fn time_per_customer(client: &Client) -> String {
+pub fn time_per_customer(client: &Client, days: u32) -> String {
     let coll = get_entries_collection(client);
+    let date_from = get_now_minus_x_days(days);
 
+    let matchClause = doc!{"$match" => {"date" => {"$gte" => date_from}}};
     let group = doc!{"$group" => {"_id" => {"customer" => "$customer"},"duration" => {"$sum" => "$duration"}}};
     let sort = doc!{"$sort" => {"_id.customer" => 1}};
 
-    let cursor = coll.aggregate(vec![group],
+    let aggregate = if days > 0{
+        vec![matchClause, group, sort]
+    } else {
+        vec![group, sort]
+    };
+    let cursor = coll.aggregate(aggregate,
                                 None)
         .expect("failed to execute find command");
 
@@ -122,6 +127,63 @@ pub fn time_per_customer(client: &Client) -> String {
     result_string
 }
 
+pub fn time_per_customer_and_division(client: &Client) -> String {
+    let coll = get_entries_collection(client);
+
+    let group = doc!{"$group" => {"_id" => {"customer" => "$customer",
+                                            "division" => "$division"},
+                                  "duration" => {"$sum" =>
+                                                 {"$divide" => ["$duration", 3600]}}}};
+    let sort = doc!{"$sort" => {"_id.customer" => 1, "_id.division" => 1}};
+
+    let cursor = coll.aggregate(vec![group, sort],
+                                None)
+        .expect("failed to execute find command");
+
+    let mut result_string = "{\"result\":[".to_string();
+    let mut total_duration_krailling = 0 as f64;
+    let mut total_duration_arad = 0 as f64;
+
+    for (i, doc_result) in cursor.enumerate() {
+        match doc_result{
+            Ok(doc) => {
+                let mut doc_id_and_duration = match doc.get_document("_id") {
+                    Ok(d) => d.clone(),
+                    Err(e) => panic!("no document with _id, {}", e),
+                };
+                match doc.get("duration").expect("time per customer per division no duration defined") {
+                    &Bson::FloatingPoint(duration) => {
+                        if "Arad" == doc_id_and_duration.get_str("division").expect("no division defined") {
+                            total_duration_arad = total_duration_arad + duration;
+                        } else {
+                            total_duration_krailling = total_duration_krailling + duration;
+                        }
+                        doc_id_and_duration.insert("duration", duration);
+                    },
+                    _ => panic!("time per customer division duration not a float"),
+                };
+
+                let json_string = doc_to_json_string(doc_id_and_duration);
+                let next_block = if i == 0 {
+                    format!("{}", json_string)
+                } else {
+                    format!(",{}", json_string)
+                };
+                result_string.push_str(&next_block);
+            },
+            Err(e) => panic!("err {}", e),
+        };
+    }
+
+    result_string.push_str("], \"total_duration_arad\": ");
+    result_string.push_str(&format!("{}", total_duration_arad));
+    result_string.push_str(", \"total_duration_krailling\": ");
+    result_string.push_str(&format!("{}", total_duration_krailling));
+    result_string.push_str("}");
+
+    result_string
+}
+
 const FORMAT: &'static str = "%Y-%m-%d";
 
 fn doc_to_json_string(doc: Document) -> String {
@@ -137,6 +199,7 @@ fn doc_to_json_string(doc: Document) -> String {
             },
             Bson::I32(v) => key_and_values.insert(key, v.to_string()),
             Bson::I64(v) => key_and_values.insert(key, v.to_string()),
+            Bson::FloatingPoint(v) => key_and_values.insert(key, v.to_string()),
             _ => panic!("doc_to_json_string not defined for {}", elem.1),
         };
     }
@@ -167,6 +230,12 @@ fn get_standard_find_options() -> FindOptions {
     options
 }
 
+fn get_now_minus_x_days(days: u32) -> DateTime<UTC> {
+    let now = UTC::now();
+    let duration = Duration::days(days as i64);
+    let date_from = now - duration;
+    date_from
+}
 fn get_entries_collection(client: &Client) -> Collection {
     let db = get_report_db(client);
     db.collection("entries")

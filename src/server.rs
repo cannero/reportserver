@@ -8,7 +8,9 @@ extern crate reportlib;
 extern crate mongodb;
 
 use std::error::Error;
+use std::num::ParseIntError;
 use std::fmt;
+use url::form_urlencoded::ParseIntoOwned;
 use iron::prelude::*;
 use router::Router;
 use staticfile::Static;
@@ -53,6 +55,25 @@ struct Context {
     client: mongodb::Client
 }
 
+fn get_days_from_query_string(query_pairs: ParseIntoOwned) -> Result<u32, ParseIntError> {
+
+    let mut days: u32 = 0;
+    for key_value in  query_pairs {
+        if key_value.0 == "days" {
+            //try! macro not used because error is logged to console
+            days = match key_value.1.to_string().parse() {
+                Ok(d) => d,
+                Err(e) => {
+                    println!("days {} could not be parsed, {}",
+                             key_value.1, e);
+                    return Err(e);
+                }
+            };
+        }
+    }
+    Ok(days)
+}
+
 fn hello_world(req: &mut Request) -> IronResult<Response> {
     let path = req.url.path().join("/");
     Ok(Response::with((iron::status::Ok, ["Hello World ", &path].concat())))
@@ -61,19 +82,13 @@ fn hello_world(req: &mut Request) -> IronResult<Response> {
 fn data_for_employees(req: &mut Request, context: &Context) -> IronResult<Response> {
     let parsed_url: url::Url = (req.url.clone()).into();
 
-    let mut days: u32 = 0;
-    for key_value in  parsed_url.query_pairs().into_owned() {
-        if key_value.0 == "days" {
-            days = match key_value.1.to_string().parse() {
+    let days: u32 = match get_days_from_query_string(parsed_url.query_pairs().into_owned()) {
                 Ok(d) => d,
                 Err(e) => {
-                    println!("days {} could not be parsed, {}",
-                             key_value.1, e);
                     return Err(IronError::new(e, iron::status::ImATeapot));
                 }
-            };
-        }
-    }
+    };
+
     let result = get_employee_data_newer_than(&context.client, days);
     Ok(Response::with((iron::status::Ok, result)))
 }
@@ -96,8 +111,20 @@ fn containing_comment(req: &mut Request, context: &Context) -> IronResult<Respon
     Ok(Response::with((iron::status::Ok, result)))
 }
 
-fn time_per_customer(_req: &mut Request, context: &Context) -> IronResult<Response> {
-    let result = reportlib::time_per_customer(&context.client);
+fn time_per_customer(req: &mut Request, context: &Context) -> IronResult<Response> {
+    let parsed_url: url::Url = (req.url.clone()).into();
+
+    let days = match get_days_from_query_string(parsed_url.query_pairs().into_owned()) {
+        Ok(d) => d,
+        Err(_e) => 0,
+    };
+    
+    let result = reportlib::time_per_customer(&context.client, days);
+    Ok(Response::with((iron::status::Ok, result)))
+}
+
+fn time_per_customer_and_division(_req: &mut Request, context: &Context) -> IronResult<Response> {
+    let result = reportlib::time_per_customer_and_division(&context.client);
     Ok(Response::with((iron::status::Ok, result)))
 }
 
@@ -116,7 +143,10 @@ fn main() {
 
     let c = context.clone();
     api_router.get("/timepercustomer", move |request: &mut Request| time_per_customer(request, &c), "timepercustomer");
-    
+
+    let c = context.clone();
+    api_router.get("/timepercustomerdivision", move |request: &mut Request| time_per_customer_and_division(request, &c), "timepercustomerdivision");
+
     let mut cors_chain = Chain::new(api_router);
     cors_chain.link_after(CorsMiddleware);
     

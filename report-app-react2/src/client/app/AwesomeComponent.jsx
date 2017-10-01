@@ -11,7 +11,8 @@ class AwesomeComponent extends React.Component {
         this.state = {
             likesCount: 0,
             message: 'not loaded',
-            handsontableData: []
+            handsontableData: [],
+            numDays: 5
         };
         this.columnmapping = [
             {data: 'date'},
@@ -23,11 +24,21 @@ class AwesomeComponent extends React.Component {
         this.onLike = this.onLike.bind(this);
     }
 
+    changeNumDays = (evt) => {
+        this.setState({
+            numDays: evt.target.value
+        });
+    };
+
     onLike(){
         let newLikesCount = this.state.likesCount + 1;
         this.setState({likesCount: newLikesCount});
+        const days = this.state.numDays;
+        let url = 'http://localhost:3000/api/foremployee';
+        if(days > 0){
+            url = url + '?days=' + encodeURIComponent(days);
+        }
 
-        const url = 'http://localhost:3000/api/foremployee';
         const self = this;
         xhr({
             url: url
@@ -50,10 +61,13 @@ class AwesomeComponent extends React.Component {
     render() {
         return (
             <div>
-                Likes : <span>{this.state.likesCount}</span>
+                <label>Days
+                    <input placeholder={this.state.numDays} type="text"
+                           value={this.state.numDays} onChange={this.changeNumDays}/>
+                </label>
                 <div><Button bsStyle="info" onClick={this.onLike}>Like Me</Button></div>
                 <div id="example-component">
-                    <HotTable root="hot" columns= {this.columnmapping} data={this.state.handsontableData} colHeaders={true} rowHeaders={true} width="1000" height="300" stretchH="all" />
+                    <HotTable root="hot" columns= {this.columnmapping} data={this.state.handsontableData} colHeaders={true} rowHeaders={true} height="750" stretchH="all" />
                 </div>
                 <div><span>{this.state.message}</span></div>
             </div>

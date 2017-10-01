@@ -77,8 +77,12 @@ pub fn get_entries_containing_comment(client: &mongodb::Client, part: &String) -
     dbaccess::get_entries_containing_comment(client, &part)
 }
 
-pub fn time_per_customer(client: &mongodb::Client) -> String {
-    dbaccess::time_per_customer(client)
+pub fn time_per_customer(client: &mongodb::Client, days: u32) -> String {
+    dbaccess::time_per_customer(client, days)
+}
+
+pub fn time_per_customer_and_division(client: &mongodb::Client) -> String {
+    dbaccess::time_per_customer_and_division(client)
 }
 
 pub fn get_connection() -> mongodb::Client {
